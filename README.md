@@ -20,6 +20,8 @@ There will be lots of shell examples, so go ahead and open the terminal.
 
 * [How does it differ from virtualization?](#how-does-it-differ-from-virtualization)
 
+* [Docker Architecture](#docker-architecture)
+
 * [So is this Serverless?](#so-is-this-serverless)
 
 * [Why do we need Docker?](#why-do-we-need-docker)
@@ -82,7 +84,7 @@ When you develop an application, you need to provide your code along with all po
 
 This challenge can be addressed by isolating the app to make it independent of the system.
 
-  ![Ship your machine](./images/shipit.png)
+  ![Ship your machine](./images/shipIt.png)
 
 ## How does it differ from virtualization?
 
@@ -102,6 +104,12 @@ Docker eliminates all the above by simply sharing the OS kernel across all the c
 
 Keep in mind that Docker is not the first and not the only containerization platform. However, at the moment Docker is the biggest and the most powerful player on the market. They do however have a commitment to [Open Container Initiative](https://opencontainers.org/about/overview/) which is a shared standard for how containers are built and ran.
 
+## Docker Architecture
+
+Described by Docker [themselves](https://docs.docker.com/get-started/overview/) but it is basically a client server approach. When you install something like docker desktop you are getting both the client and the server (daemon in this nomenclature) but it's entirely possible to have your client talk to another docker server instance elsewhere. You'll find this useful if your containers are running remotely maybe in the cloud.
+
+![Docker Architecture](./images/architecture.svg)
+
 ## So is this Serverless?
 
 No not quite but they do have similarities in what their intentions are. It's trying to abstract away configuration and runtime details from developers to let them focus in on the code. With docker you build containers and that involves picking a base OS image and adding packages and libraries and runtimes. For serverless you supply the code really and request which runtime it gets executed against. 
@@ -113,12 +121,7 @@ The cost of ownership is slightly higher with Docker but with that comes increas
 
 ## Why is Docker?
 
-  
-
 The short list of benefits includes:
-
-  
-
 * Faster development process
 
 * Handy application encapsulation
@@ -127,13 +130,9 @@ The short list of benefits includes:
 
 * Easy and clear monitoring
 
-* Easy to scale
-
-  
+* Easy to scale  
 
 ### Faster development process
-
-  
 
 There is no need to install 3rd-party apps like PostgreSQL, Redis, Elasticsearch on the system -- you can run it in containers. Docker also gives you the ability to run different versions of same application simultaneously. For example, say you need to do some manual data migration from an older version of Postgres to a newer version. You can have such a situation in microservice architecture when you want to create a new microservice with a new version of the 3rd-party software.
 
@@ -195,8 +194,6 @@ Docker's native platform is Linux, as it's based on features provided by the Lin
 
 ## Installation
 
-  
-
 You can check out the installation instructions for Docker [here](https://docs.docker.com/install/).
 
 You maybe have heard about the commercial license changes recently. It won't impact anyone here in this room today as students but for orgs over a certain size you have to pay now. This has lead to people leveraging other options like [podman](https://podman.io/) in it's place (as containers are standard and so interoperable) 
@@ -205,11 +202,7 @@ You maybe have heard about the commercial license changes recently. It won't imp
 
 ## Terminology
 
-  
-
 *  **Container** -- a running instance that encapsulates required software. Containers are always created from images. A container can expose ports and volumes to interact with other containers or/and the outer world. Containers can be easily killed / removed and re-created again in a very short time. Containers don't keep state.
-
-  
 
 *  **Image** -- the basic element for every container. When you create an image, every step is cached and can be reused ([Copy On Write model](https://en.wikipedia.org/wiki/Copy-on-write)). Depending on the image, it can take some time to build. Containers, on the other hand, can be started from images right away.
 
@@ -248,7 +241,12 @@ It's time to run your first container:
 docker run ubuntu /bin/echo 'Hello world'
 
 ```
+this is shorthand for
+```bash
+#docker run docker.io/<dockerimagename>:version <command>
+docker run docker.io/ubuntu:latest /bin/echo 'Hello world'
 
+```
   
 
 Console output:
@@ -615,7 +613,9 @@ docker inspect test-nginx
 
 This command displays system-wide information about the Docker installation. This information includes the kernel version, number of containers and images, exposed ports, mounted volumes, etc.
 
-  
+  ### When to use volumes
+  If you want to keep data between instances then using a volume is a great plan/ Your containers should aim to be as stateless as possible. This is why you're told not to make changes to running containers if you can (like changing config) because if the instance gets killed and recreated you're now divergent.
+Imagine you have a db (postgres for example) and load a lot of data in it. Once that container is killed your data will be lost so if that's a problem for you then a volume is your friend. Think of it almost as an external HDD you plug in to the container.
 
 ## Example 3: Writing your first Dockerfile
 
@@ -837,7 +837,7 @@ cat ./vol/results
 
   
 
-## Best practices for creating images
+### Best practices for creating images
 
   
 
@@ -855,7 +855,7 @@ cat ./vol/results
 
   
 
-## Alpine images
+### Alpine images
 
   
 
@@ -867,7 +867,33 @@ I recommend that you use images based on Alpine for third-party services, such a
 
 Only you can decide which base image to use, but you can get the maximum benefit by using one basic image for all images, because in this case the cache will be used more effectively.
 
-  
+ ### Pushing to dockerhub
+[Docker docs](https://docs.docker.com/docker-hub/repos/#:~:text=To%20push%20an%20image%20to,docs/base:testing%20%29.)
+
+ - Sign up for a free account for dockerhub
+ - Create a Repository called qcs-workshop-image and mark it public
+
+![Docker hub Repo](./images/repo.png)
+
+Then we need to 'tag' our local image again. This is sticking a label on it really. We do that with the following command
+
+``` bash
+#docker tag local-image:tagname new-repo:tagname
+docker tag test-curl patrickwalker/qcs-workshop-image:latest
+```
+
+and now we want to push that to the remote dockerhub. The folliowing command will do that
+```bash
+#docker push new-repo:tagname
+docker push patrickwalker/qcs-workshop-image:latest
+
+```
+
+You will probably have to login to do this
+```bash
+docker login
+```
+
 
 ## Example 4: Connection between containers
 
